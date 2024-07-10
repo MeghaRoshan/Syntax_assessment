@@ -1,0 +1,31 @@
+import os
+import numpy as np
+
+from deta import Deta
+
+#Initialise database
+def initialize_db(DETA_KEY, DETA_BASE):
+    global db, DETA_KEY_VALUE, DETA_BASE_VALUE
+    DETA_KEY_VALUE, DETA_BASE_VALUE = DETA_KEY, DETA_BASE
+    deta = Deta(DETA_KEY_VALUE)
+    db = deta.Base(DETA_BASE_VALUE)
+
+#Store data in database
+class StoreResults:
+    def __call__(self, batch):
+        deta = Deta(DETA_KEY_VALUE)
+        db = deta.Base(DETA_BASE_VALUE)
+        for context, embedding in zip(batch["context"], batch["embeddings"]):
+            db.put({"context": context, "embedding": embedding})
+        return {}
+
+#Fetch data from database
+def fetch_embeddings():
+    res = db.fetch()
+    all_items = res.items
+
+    while res.last:
+        res = db.fetch(last=res.last)
+        all_items += res.items
+    
+    return all_items
